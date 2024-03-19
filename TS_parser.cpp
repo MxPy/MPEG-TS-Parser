@@ -19,7 +19,7 @@ int main(int argc, char *argv[ ], char *envp[ ])
   xTS_PacketHeader    TS_PacketHeader;
 
   int32_t TS_PacketId = 0;
-  while(infile.good() && !infile.eof())
+  while(infile.good() && !infile.eof() && TS_PacketId <=20)
   {
     // TODO - read from file
     infile.read (buffer, xTS::TS_PacketLength);

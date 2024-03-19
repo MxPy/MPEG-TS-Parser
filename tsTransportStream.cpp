@@ -26,17 +26,22 @@ void xTS_PacketHeader::Reset()
 int32_t xTS_PacketHeader::Parse(const uint8_t* Input)
 {
   int32_t header = (Input[0] << 24) + (Input[1] << 16) + (Input[2] << 8) + Input[3];
-  // std::cout<<std::endl;
-  // std::cout<<xSwapBytes32(header & 0x30) << " " << (header & 0x1fff00);
-  // std::cout<<std::endl;
+  std::cout<<std::endl;
+  std::cout<<header << " " << (header & 0x1fff00);
+  std::cout<<std::endl;
   m_SB = xSwapBytes32(header & 0xff000000);
-  m_E = xSwapBytes32(header & 0x800000) >> 8;
-  m_S = xSwapBytes32(header & 0x400000) >> 9;
-  m_T = xSwapBytes32(header & 0x200000) >> 10;
-  m_PID = xSwapBytes32(header & 0x1fff00) >> 2;
-  m_TSC = xSwapBytes32(header & 0xc0) >> 24;
-  m_AFC = xSwapBytes32(header & 0x30) >> 26;
-  m_CC = xSwapBytes32(header & 0xf) >> 28;
+  m_E = xSwapBytes32(header & 0x800000)>>13;
+  m_S = xSwapBytes32(header & 0x400000)>>14;
+  m_T = xSwapBytes32(header & 0x200000)>>15;
+  if((header & 0x1fff00) < 65535){
+    std::cout << "chuj\n";
+    m_PID = xSwapBytes16((uint16_t)(header & 0x1fff00));
+  }else{
+    m_PID = xSwapBytes16((uint16_t)((header & 0x1fff00) >> 16));
+  } 
+  m_TSC = xSwapBytes32(header & 0xc0);
+  m_AFC = xSwapBytes32(header & 0x30);
+  m_CC = xSwapBytes32(header & 0xf);
   return NOT_VALID;
 }
 
