@@ -92,8 +92,8 @@ public:
 
 public:
   //TODO - derrived informations
-  //bool     hasAdaptationField() const { /*TODO*/ }
-  //bool     hasPayload        () const { /*TODO*/ }
+  bool     hasAdaptationField() const { return (m_AFC > 0b01) ? true : false; }
+  bool     hasPayload        () const { return (m_AFC == 0b11 or m_AFC == 0b01) ? true : false; }
 };
 
 //=============================================================================================================================================================================
@@ -106,7 +106,26 @@ uint8_t m_AdaptationFieldControl;
 //mandatory fields
 uint8_t m_AdaptationFieldLength;
 //optional fields - PCR
+bool m_E;
+bool m_DC;
+bool m_RA;
+bool m_SP;
+bool m_PR;
+bool m_OR;
+bool m_SF;
+bool m_TP;
+bool m_EX;
+
+uint64_t m_PCR;
+uint64_t m_OPCR;
+uint8_t m_SC;
+uint8_t m_TPDL;
+uint8_t* m_TPD;
+uint8_t* m_AE;
+uint8_t* m_SB;
+
 public:
+xTS_AdaptationField(): m_TPD(nullptr), m_AE(nullptr), m_SB(nullptr){}
 void Reset();
 int32_t Parse(const uint8_t* PacketBuffer, uint8_t AdaptationFieldControl);
 void Print() const;

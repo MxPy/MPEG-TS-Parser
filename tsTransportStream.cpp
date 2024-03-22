@@ -50,7 +50,32 @@ void xTS_PacketHeader::Print() const
 /// @brief Reset - reset all TS packet header fields
 void xTS_AdaptationField::Reset()
 {
-//reset
+//setup
+m_AdaptationFieldControl = 0;
+//mandatory fields
+m_AdaptationFieldLength = 0;
+//optional fields - PCR
+m_E = 0;
+m_DC = 0;
+m_RA = 0;
+m_SP = 0;
+m_PR = 0;
+m_OR = 0;
+m_SF = 0;
+m_TP = 0;
+m_EX = 0;
+
+m_PCR = 0;
+m_OPCR = 0;
+m_SC = 0;
+m_TPDL = 0;
+
+if(m_TPD) delete m_TPD;
+m_TPD = nullptr;
+if(m_AE) delete m_AE;
+m_AE = nullptr;
+if(m_SB) delete m_SB;
+m_SB = nullptr;
 }
 /**
 @brief Parse adaptation field

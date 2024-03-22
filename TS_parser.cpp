@@ -17,9 +17,10 @@ int main(int argc, char *argv[ ], char *envp[ ])
   // TODO - check if file if opened
 
   xTS_PacketHeader    TS_PacketHeader;
+  xTS_AdaptationField   TS_AdaptationField;
 
   int32_t TS_PacketId = 0;
-  while(infile.good() && !infile.eof() && TS_PacketId <=20)
+  while(infile.good() && !infile.eof() && TS_PacketId <=33)
   {
     // TODO - read from file
     infile.read (buffer, xTS::TS_PacketLength);
@@ -31,10 +32,10 @@ int main(int argc, char *argv[ ], char *envp[ ])
 
     TS_PacketHeader.Reset();
     TS_PacketHeader.Parse(header);
-
     printf("%010d ", TS_PacketId);
     TS_PacketHeader.Print();
     printf("\n");
+    TS_AdaptationField.Reset();
 
     TS_PacketId++;
   }
