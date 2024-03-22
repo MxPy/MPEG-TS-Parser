@@ -12,7 +12,6 @@ int main(int argc, char *argv[ ], char *envp[ ])
   std::ifstream infile;
   infile.open("example_new.ts",std::ios::binary);
   char *buffer = new char[xTS::TS_PacketLength];
-  uint8_t *header = new uint8_t[4];
  
   // TODO - check if file if opened
 
@@ -25,17 +24,18 @@ int main(int argc, char *argv[ ], char *envp[ ])
     // TODO - read from file
     infile.read (buffer, xTS::TS_PacketLength);
 
-    header[0] = buffer[0];
-    header[1] = buffer[1];
-    header[2] = buffer[2];
-    header[3] = buffer[3];
-
     TS_PacketHeader.Reset();
-    TS_PacketHeader.Parse(header);
+    TS_PacketHeader.Parse((uint8_t*)buffer);
     printf("%010d ", TS_PacketId);
     TS_PacketHeader.Print();
+    
+    if(TS_PacketHeader.hasAdaptationField()){
+      TS_AdaptationField.Reset();
+      TS_AdaptationField.Parse((uint8_t*)buffer, TS_PacketHeader.getAdaptationFieldControl());
+      TS_AdaptationField.Print();
+    }
+
     printf("\n");
-    TS_AdaptationField.Reset();
 
     TS_PacketId++;
   }

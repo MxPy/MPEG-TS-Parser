@@ -55,7 +55,6 @@ m_AdaptationFieldControl = 0;
 //mandatory fields
 m_AdaptationFieldLength = 0;
 //optional fields - PCR
-m_E = 0;
 m_DC = 0;
 m_RA = 0;
 m_SP = 0;
@@ -87,10 +86,25 @@ corresponding TS packet header
 int32_t xTS_AdaptationField::Parse(const uint8_t* PacketBuffer, uint8_t
 AdaptationFieldControl)
 {
+  m_AdaptationFieldControl = (uint8_t) AdaptationFieldControl;
+  // std::cout<<std::endl;
+  // std::cout<<(int)m_AdaptationFieldControl<<std::endl;
+  // std::cout<<std::endl;  
+  m_AdaptationFieldLength = PacketBuffer[4];
+  m_DC = PacketBuffer[5] & 0x80;
+  m_RA = PacketBuffer[5] & 0x40;
+  m_SP = PacketBuffer[5] & 0x20;
+  m_PR = PacketBuffer[5] & 0x10;
+  m_OR = PacketBuffer[5] & 0x08;
+  m_SF = PacketBuffer[5] & 0x04;
+  m_TP = PacketBuffer[5] & 0x02;
+  m_EX = PacketBuffer[5] & 0x01;
+
 //parsing
 }
 /// @brief Print all TS packet header fields
 void xTS_AdaptationField::Print() const
 {
+  std::cout<<" AF: L="<<(int)m_AdaptationFieldLength<<" DC="<<m_DC<<" RA="<<m_RA<<" SP="<<m_SP<<" PR="<<m_PR<<" OR="<<m_OR<<" SF="<<m_SF<<" TP="<<m_TP<<" EX="<<m_EX;
 //print print print
 }
