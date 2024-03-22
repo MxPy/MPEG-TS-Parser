@@ -19,7 +19,7 @@ int main(int argc, char *argv[ ], char *envp[ ])
   xTS_AdaptationField   TS_AdaptationField;
 
   int32_t TS_PacketId = 0;
-  while(infile.good() && !infile.eof() && TS_PacketId <=33)
+  while(infile.good() && !infile.eof() && TS_PacketId <=191)
   {
     // TODO - read from file
     infile.read (buffer, xTS::TS_PacketLength);
@@ -28,7 +28,7 @@ int main(int argc, char *argv[ ], char *envp[ ])
     TS_PacketHeader.Parse((uint8_t*)buffer);
     printf("%010d ", TS_PacketId);
     TS_PacketHeader.Print();
-    
+
     if(TS_PacketHeader.hasAdaptationField()){
       TS_AdaptationField.Reset();
       TS_AdaptationField.Parse((uint8_t*)buffer, TS_PacketHeader.getAdaptationFieldControl());

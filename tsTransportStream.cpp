@@ -100,11 +100,20 @@ AdaptationFieldControl)
   m_TP = PacketBuffer[5] & 0x02;
   m_EX = PacketBuffer[5] & 0x01;
 
+  if(m_PR){
+    m_PCR = PacketBuffer[13] +(PacketBuffer[12] << 8) + (PacketBuffer[11] << 16) + 
+    (PacketBuffer[10] << 24) + (PacketBuffer[9] << 32) + (PacketBuffer[8] << 40) + 
+    (PacketBuffer[7] << 48) + (PacketBuffer[6] << 56);
+    //m_PCR = (m_PCR & 0x1ffffffff);
+  }
+
 //parsing
 }
 /// @brief Print all TS packet header fields
 void xTS_AdaptationField::Print() const
 {
   std::cout<<" AF: L="<<(int)m_AdaptationFieldLength<<" DC="<<m_DC<<" RA="<<m_RA<<" SP="<<m_SP<<" PR="<<m_PR<<" OR="<<m_OR<<" SF="<<m_SF<<" TP="<<m_TP<<" EX="<<m_EX;
+  if(m_PR) std::cout<<" PCR="<< m_PCR;
+  
 //print print print
 }
