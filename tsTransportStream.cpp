@@ -41,7 +41,7 @@ int32_t xTS_PacketHeader::Parse(const uint8_t* Input)
 void xTS_PacketHeader::Print() const
 {
   //print sth
-  std::cout<<"TS: SB="<<(int)m_SB<<" E="<<m_E<<" S="<<m_S<<" P="<<m_T<<" PID="<<m_PID<<" TSC="<<m_TSC<<" AFC="<<m_AFC<<" CC="<<m_CC;
+  std::cout<<"TS: SB="<<(int)m_SB<<" E="<<m_E<<" S="<<m_S<<" P="<<m_T<<" PID="<<m_PID<<" TSC="<<(int)m_TSC<<" AFC="<<(int)m_AFC<<" CC="<<(int)m_CC;
 }
 
 //=============================================================================================================================================================================
@@ -101,10 +101,10 @@ AdaptationFieldControl)
   m_EX = PacketBuffer[5] & 0x01;
 
   if(m_PR){
-    m_PCR = PacketBuffer[13] +(PacketBuffer[12] << 8) + (PacketBuffer[11] << 16) + 
-    (PacketBuffer[10] << 24) + (PacketBuffer[9] << 32) + (PacketBuffer[8] << 40) + 
-    (PacketBuffer[7] << 48) + (PacketBuffer[6] << 56);
-    //m_PCR = (m_PCR & 0x1ffffffff);
+    m_PCR =  PacketBuffer[11] + 
+    (PacketBuffer[10] << 8) + (PacketBuffer[9] << 16) + (PacketBuffer[8] << 24) + 
+    (PacketBuffer[7] << 32) + (PacketBuffer[6] << 40);
+    m_PCR = (m_PCR & 0xffffffff);
   }
 
 //parsing
@@ -113,7 +113,7 @@ AdaptationFieldControl)
 void xTS_AdaptationField::Print() const
 {
   std::cout<<" AF: L="<<(int)m_AdaptationFieldLength<<" DC="<<m_DC<<" RA="<<m_RA<<" SP="<<m_SP<<" PR="<<m_PR<<" OR="<<m_OR<<" SF="<<m_SF<<" TP="<<m_TP<<" EX="<<m_EX;
-  if(m_PR) std::cout<<" PCR="<< m_PCR;
+  if(m_PR) std::cout<<" PCR="<< std::hex << m_PCR;
   
 //print print print
 }

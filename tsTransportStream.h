@@ -75,9 +75,9 @@ protected:
   bool m_T;
   //TODO change it
   uint16_t m_PID;
-  uint16_t m_TSC;
-  uint16_t m_AFC;
-  uint16_t m_CC;
+  uint8_t m_TSC;
+  uint8_t m_AFC;
+  uint8_t m_CC;
 
 
 
