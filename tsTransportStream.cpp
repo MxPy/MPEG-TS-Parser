@@ -101,10 +101,14 @@ AdaptationFieldControl)
   m_EX = PacketBuffer[5] & 0x01;
 
   if(m_PR){
-    m_PCR =  PacketBuffer[11] + 
-    (PacketBuffer[10] << 8) + (PacketBuffer[9] << 16) + (PacketBuffer[8] << 24) + 
-    (PacketBuffer[7] << 32) + (PacketBuffer[6] << 40);
-    m_PCR = (m_PCR & 0xffffffff);
+    m_PCR = (((uint64_t)PacketBuffer[6]) << 25) | 
+            (((uint64_t)PacketBuffer[7]) << 17) |
+            (((uint64_t)PacketBuffer[8]) << 9) | 
+            (((uint64_t)PacketBuffer[9]) << 1) |
+            ((0b10000000 & PacketBuffer[10])?1:0);
+    int extension = (1 & PacketBuffer[10]);
+    extension = (extension << 8) | PacketBuffer[11];
+    m_PCR = (m_PCR * 300) +  extension;
   }
 
 //parsing
@@ -113,7 +117,7 @@ AdaptationFieldControl)
 void xTS_AdaptationField::Print() const
 {
   std::cout<<" AF: L="<<(int)m_AdaptationFieldLength<<" DC="<<m_DC<<" RA="<<m_RA<<" SP="<<m_SP<<" PR="<<m_PR<<" OR="<<m_OR<<" SF="<<m_SF<<" TP="<<m_TP<<" EX="<<m_EX;
-  if(m_PR) std::cout<<" PCR="<< std::hex << m_PCR;
+  if(m_PR) std::cout<<" PCR="<<int(m_PCR);
   
 //print print print
 }
