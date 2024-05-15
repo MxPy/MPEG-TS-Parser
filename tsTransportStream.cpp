@@ -1,4 +1,5 @@
 #include "tsTransportStream.h"
+#include <string.h>
 
 //=============================================================================================================================================================================
 // xTS_PacketHeader
@@ -120,4 +121,104 @@ void xTS_AdaptationField::Print() const
   if(m_PR) std::cout<<" PCR="<<int(m_PCR);
   
 //print print print
+}
+
+void xPES_PacketHeader::Reset(){
+   m_PacketStartCodePrefix = 0;               
+  m_StreamId = 0;
+  m_PacketLength = 0;
+}
+
+int32_t xPES_PacketHeader::Parse(const uint8_t* Input){
+  m_PacketStartCodePrefix = (((uint32_t)Input[0]) << 16) |
+                            (((uint32_t)Input[1]) << 8) | 
+                            (((uint32_t)Input[2]));                   
+  m_StreamId = Input[3];
+  m_PacketLength =  (((uint64_t)Input[4]) << 8) | 
+                    (((uint64_t)Input[5]));
+  return 1;            
+}
+
+void xPES_PacketHeader::Print() const{
+  printf("PES: PSCP=%06X SID=%02X L=%d",m_PacketStartCodePrefix, (int) m_StreamId, m_PacketLength);
+}
+
+xPES_Assembler::eResult xPES_Assembler::AbsorbPacket(const uint8_t* TransportStreamPacket, const xTS_PacketHeader* PacketHeader, const xTS_AdaptationField* AdaptationField){
+  if(PacketHeader->getS() == 1 && PacketHeader->getPID() == 136 && PacketHeader->getCC() == 0 && m_PID == -1){
+    uint8_t* PES_Head_Input = new uint8_t[6]; 
+    if(PacketHeader->hasAdaptationField()){
+      for (int i {0}; i<6; i++){
+        PES_Head_Input[i]=TransportStreamPacket[5+i+AdaptationField->getAdaptationFieldLength()];
+      }
+    }else{
+      for (int i {0}; i<6; i++){
+        PES_Head_Input[i]=TransportStreamPacket[4+i];
+      }
+    }
+    m_PESH.Parse(PES_Head_Input);
+    m_PID = 136;
+    m_BufferSize = m_PESH.getPacketLength()+6;
+    m_DataOffset = 0;
+    m_Buffer = new uint8_t[m_BufferSize];
+    if(PacketHeader->hasAdaptationField()){
+      for (int i {0}; i<184-AdaptationField->getAdaptationFieldLength()-1; i++){
+        m_Buffer[i]=TransportStreamPacket[5+i+AdaptationField->getAdaptationFieldLength()];
+        m_DataOffset++;
+
+      }
+    }else{
+      for (int i {0}; i<184; i++){
+        m_Buffer[i]=TransportStreamPacket[4+i];
+        m_DataOffset++;
+      }
+    }
+    std::cout<<std::endl<<(int)m_Buffer[8]<<std::endl;
+    return xPES_Assembler::eResult::AssemblingStarted;
+  }
+  else if(PacketHeader->getS() == 0 && PacketHeader->getPID() == 136 && m_PID != -1 && PacketHeader->getCC() != 0){
+      if(PacketHeader->hasAdaptationField()){
+        for (int i {0}; i<184-AdaptationField->getAdaptationFieldLength()-1; i++){
+          m_Buffer[i]=TransportStreamPacket[5+i+AdaptationField->getAdaptationFieldLength()];
+          m_DataOffset++;
+        }
+      }else{
+        for (int i {0}; i<184; i++){
+          m_Buffer[i]=TransportStreamPacket[4+i];
+          m_DataOffset++;
+        }
+      }
+      
+      if(m_DataOffset == m_BufferSize){
+        return xPES_Assembler::eResult::AssemblingFinished;
+      }
+    return xPES_Assembler::eResult::AssemblingContinue;
+  }
+  // else if(PacketHeader->getS() == 1 && PacketHeader->getPID() == 136 && ){
+  //   return xPES_Assembler::eResult::AssemblingFinished;
+  // }
+  return xPES_Assembler::eResult::UnexpectedPID;
+}
+
+void xPES_Assembler::xBufferReset (){
+  m_PESH.Reset();
+  memset(m_Buffer, 0, sizeof(m_Buffer));
+  m_PID = -1;
+  m_BufferSize = 0;
+  m_DataOffset = 0;
+  m_PESH.Reset();
+}
+
+void xPES_Assembler::xBufferAppend(const uint8_t* Data, int32_t Size){
+
+}
+
+void xPES_Assembler::saveBufferToFile(FILE* AudioMP2) {
+    fwrite(getPacket(), 1, getNumPacketBytes(), AudioMP2);
+    xBufferReset();
+}
+
+void xPES_Assembler::Init (int32_t PID){
+  m_PID = -1;
+  m_BufferSize = 0;
+  m_DataOffset = 0;
 }

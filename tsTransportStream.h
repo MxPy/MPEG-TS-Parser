@@ -89,6 +89,9 @@ public:
 public:
   //TODO - direct acces to header field value, e.g.:
   uint8_t  getSyncByte() const { return m_SB; }  
+  bool getS() const { return m_S; }
+  uint16_t getPID() const { return m_PID; }
+  uint8_t getCC() const { return m_CC; }
   uint16_t getAdaptationFieldControl() const { return m_AFC; }  
 
 public:
@@ -136,4 +139,73 @@ uint8_t getAdaptationFieldLength () const { return
 m_AdaptationFieldLength ; }
 //derived values
 //uint32_t getNumBytes () const { }
+};
+
+
+
+class xPES_PacketHeader
+{
+public:
+enum eStreamId : uint8_t
+{
+eStreamId_program_stream_map = 0xBC,
+eStreamId_padding_stream = 0xBE,
+eStreamId_private_stream_2 = 0xBF,
+eStreamId_ECM = 0xF0,
+eStreamId_EMM = 0xF1,
+eStreamId_program_stream_directory = 0xFF,
+eStreamId_DSMCC_stream = 0xF2,
+eStreamId_ITUT_H222_1_type_E = 0xF8,
+};
+protected:
+//PES packet header
+uint32_t m_PacketStartCodePrefix;
+uint8_t m_StreamId;
+uint16_t m_PacketLength;
+public:
+void Reset();
+int32_t Parse(const uint8_t* Input);
+void Print() const;
+public:
+//PES packet header
+uint32_t getPacketStartCodePrefix() const { return m_PacketStartCodePrefix; }
+uint8_t getStreamId () const { return m_StreamId; }
+uint16_t getPacketLength () const { return m_PacketLength; }
+};
+
+
+class xPES_Assembler
+{
+public:
+enum class eResult : int32_t
+{
+UnexpectedPID = 1,
+StreamPackedLost ,
+AssemblingStarted ,
+AssemblingContinue,
+AssemblingFinished,
+};
+protected:
+//setup
+int32_t m_PID;
+//buffer
+uint8_t* m_Buffer;
+uint32_t m_BufferSize;
+uint32_t m_DataOffset;
+//operation
+int8_t m_LastContinuityCounter;
+bool m_Started;
+xPES_PacketHeader m_PESH;
+public:
+xPES_Assembler (){};
+~xPES_Assembler(){};
+void Init (int32_t PID);
+eResult AbsorbPacket(const uint8_t* TransportStreamPacket, const xTS_PacketHeader* PacketHeader, const xTS_AdaptationField* AdaptationField);
+void PrintPESH () const { m_PESH.Print(); }
+uint8_t* getPacket () { return m_Buffer; }
+int32_t getNumPacketBytes() const { return m_DataOffset; }
+void saveBufferToFile (FILE* AudioMP2);
+protected:
+void xBufferReset ();
+void xBufferAppend(const uint8_t* Data, int32_t Size);
 };
