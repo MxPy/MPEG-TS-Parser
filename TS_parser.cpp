@@ -22,7 +22,7 @@ int main(int argc, char *argv[ ], char *envp[ ])
   xPES_Assembler PES_Assembler;
   PES_Assembler.Init(-1);
   int32_t TS_PacketId = 0;
-  while(infile.good() && !infile.eof() && TS_PacketId<20)
+  while(infile.good() && !infile.eof() && TS_PacketId<20000)
   {
     // TODO - read from file
     infile.read (buffer, xTS::TS_PacketLength);
@@ -44,7 +44,7 @@ int main(int argc, char *argv[ ], char *envp[ ])
     case xPES_Assembler::eResult::AssemblingStarted : printf(" Started "); PES_Assembler.PrintPESH(); break;
     case xPES_Assembler::eResult::AssemblingContinue: printf(" Continue "); break;
     case xPES_Assembler::eResult::AssemblingFinished: printf(" Finished "); printf("PES: Len=%d", PES_Assembler.getNumPacketBytes());
-    PES_Assembler.saveBufferToFile(AudioMP2);break;
+    PES_Assembler.saveBufferToFile(AudioMP2);std::cout<<(int)TS_PacketHeader.getPID()<<std::endl;break;
     default: break;
     }
     printf("\n");

@@ -136,6 +136,11 @@ int32_t xPES_PacketHeader::Parse(const uint8_t* Input){
   m_StreamId = Input[3];
   m_PacketLength =  (((uint64_t)Input[4]) << 8) | 
                     (((uint64_t)Input[5]));
+  m_HeaderLength = 6;
+  if(m_StreamId == 0xBD || m_StreamId >= 0xC0 && m_StreamId <= 0xDF || m_StreamId >= 0xE0 && m_StreamId <= 0xEF){
+    m_HeaderLength+=3;
+    m_HeaderLength += (int) Input[8];
+  }
   return 1;            
 }
 
@@ -145,30 +150,32 @@ void xPES_PacketHeader::Print() const{
 
 xPES_Assembler::eResult xPES_Assembler::AbsorbPacket(const uint8_t* TransportStreamPacket, const xTS_PacketHeader* PacketHeader, const xTS_AdaptationField* AdaptationField){
   if(PacketHeader->getS() == 1 && PacketHeader->getPID() == 136 && PacketHeader->getCC() == 0 && m_PID == -1){
-    uint8_t* PES_Head_Input = new uint8_t[6]; 
+    uint8_t* PES_Head_Input = new uint8_t[9]; 
     if(PacketHeader->hasAdaptationField()){
-      for (int i {0}; i<6; i++){
+      for (int i {0}; i<9; i++){
         PES_Head_Input[i]=TransportStreamPacket[5+i+AdaptationField->getAdaptationFieldLength()];
       }
     }else{
-      for (int i {0}; i<6; i++){
+      for (int i {0}; i<9; i++){
         PES_Head_Input[i]=TransportStreamPacket[4+i];
       }
     }
     m_PESH.Parse(PES_Head_Input);
     m_PID = 136;
     m_BufferSize = m_PESH.getPacketLength()+6;
-    m_DataOffset = 0;
+    m_DataOffset = m_PESH.getHeaderLength();
     m_Buffer = new uint8_t[m_BufferSize];
     if(PacketHeader->hasAdaptationField()){
-      for (int i {0}; i<184-AdaptationField->getAdaptationFieldLength()-1; i++){
-        m_Buffer[i]=TransportStreamPacket[5+i+AdaptationField->getAdaptationFieldLength()];
+      for (int i {0}; i<184-AdaptationField->getAdaptationFieldLength()-1 - m_PESH.getHeaderLength(); i++){
+        m_Buffer[m_DataOffset-m_PESH.getHeaderLength()]=TransportStreamPacket[5+i+AdaptationField->getAdaptationFieldLength() + m_PESH.getHeaderLength()];
+        //std::cout<<"1H==== "<<std::hex<<(int)m_Buffer[i]<<" ===="<<std::endl;
         m_DataOffset++;
 
       }
     }else{
       for (int i {0}; i<184; i++){
-        m_Buffer[i]=TransportStreamPacket[4+i];
+        m_Buffer[m_DataOffset-m_PESH.getHeaderLength()]=TransportStreamPacket[4+i];
+        //std::cout<<"2H==== "<<std::hex<<(int)m_Buffer[i]<<" ===="<<std::endl;
         m_DataOffset++;
       }
     }
@@ -178,12 +185,14 @@ xPES_Assembler::eResult xPES_Assembler::AbsorbPacket(const uint8_t* TransportStr
   else if(PacketHeader->getS() == 0 && PacketHeader->getPID() == 136 && m_PID != -1 && PacketHeader->getCC() != 0){
       if(PacketHeader->hasAdaptationField()){
         for (int i {0}; i<184-AdaptationField->getAdaptationFieldLength()-1; i++){
-          m_Buffer[i]=TransportStreamPacket[5+i+AdaptationField->getAdaptationFieldLength()];
+          m_Buffer[m_DataOffset-m_PESH.getHeaderLength()]=TransportStreamPacket[5+i+AdaptationField->getAdaptationFieldLength()];
+          //std::cout<<"1R==== "<<std::hex<<(int)m_Buffer[i]<<" ===="<<std::endl;
           m_DataOffset++;
         }
       }else{
         for (int i {0}; i<184; i++){
-          m_Buffer[i]=TransportStreamPacket[4+i];
+          m_Buffer[m_DataOffset-m_PESH.getHeaderLength()]=TransportStreamPacket[4+i];
+          //std::cout<<"2R==== "<<std::hex<<(int)m_Buffer[i]<<" ===="<<std::endl;
           m_DataOffset++;
         }
       }
