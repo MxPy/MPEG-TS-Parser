@@ -149,7 +149,7 @@ void xPES_PacketHeader::Print() const{
 }
 
 xPES_Assembler::eResult xPES_Assembler::AbsorbPacket(const uint8_t* TransportStreamPacket, const xTS_PacketHeader* PacketHeader, const xTS_AdaptationField* AdaptationField){
-  if(PacketHeader->getS() == 1 && PacketHeader->getPID() == 136 && PacketHeader->getCC() == 0 && m_PID == -1){
+  if(PacketHeader->getS() == 1 && PacketHeader->getPID() == 136 && m_PID == -1){
     uint8_t* PES_Head_Input = new uint8_t[9]; 
     if(PacketHeader->hasAdaptationField()){
       for (int i {0}; i<9; i++){
@@ -165,6 +165,9 @@ xPES_Assembler::eResult xPES_Assembler::AbsorbPacket(const uint8_t* TransportStr
     m_BufferSize = m_PESH.getPacketLength()+6;
     m_DataOffset = m_PESH.getHeaderLength();
     m_Buffer = new uint8_t[m_BufferSize];
+    for (int i {0}; i<m_BufferSize; ++i){
+      m_Buffer[i] = 0;
+    }
     if(PacketHeader->hasAdaptationField()){
       for (int i {0}; i<184-AdaptationField->getAdaptationFieldLength()-1 - m_PESH.getHeaderLength(); i++){
         m_Buffer[m_DataOffset-m_PESH.getHeaderLength()]=TransportStreamPacket[5+i+AdaptationField->getAdaptationFieldLength() + m_PESH.getHeaderLength()];
@@ -182,7 +185,7 @@ xPES_Assembler::eResult xPES_Assembler::AbsorbPacket(const uint8_t* TransportStr
     std::cout<<std::endl<<(int)m_Buffer[8]<<std::endl;
     return xPES_Assembler::eResult::AssemblingStarted;
   }
-  else if(PacketHeader->getS() == 0 && PacketHeader->getPID() == 136 && m_PID != -1 && PacketHeader->getCC() != 0){
+  else if(PacketHeader->getS() == 0 && PacketHeader->getPID() == 136 && m_PID != -1){
       if(PacketHeader->hasAdaptationField()){
         for (int i {0}; i<184-AdaptationField->getAdaptationFieldLength()-1; i++){
           m_Buffer[m_DataOffset-m_PESH.getHeaderLength()]=TransportStreamPacket[5+i+AdaptationField->getAdaptationFieldLength()];
@@ -192,7 +195,7 @@ xPES_Assembler::eResult xPES_Assembler::AbsorbPacket(const uint8_t* TransportStr
       }else{
         for (int i {0}; i<184; i++){
           m_Buffer[m_DataOffset-m_PESH.getHeaderLength()]=TransportStreamPacket[4+i];
-          //std::cout<<"2R==== "<<std::hex<<(int)m_Buffer[i]<<" ===="<<std::endl;
+          //std::+<<"2R==== "<<std::hex<<(int)m_Buffer[i]<<" ===="<<std::endl;
           m_DataOffset++;
         }
       }
@@ -222,7 +225,15 @@ void xPES_Assembler::xBufferAppend(const uint8_t* Data, int32_t Size){
 }
 
 void xPES_Assembler::saveBufferToFile(FILE* AudioMP2) {
-    fwrite(getPacket(), 1, getNumPacketBytes(), AudioMP2);
+  // std::cout<<std::endl<<"======First bytes======"<<std::endl;
+  //   for (int i {0}; i<31; ++i){
+  //     std::cout<<std::hex<<(int)m_Buffer[i]<<" ";
+  //   }
+  // std::cout<<std::endl<<"======Last bytes======"<<std::endl;
+  //   for (int i {m_DataOffset-30}; i<=m_DataOffset; ++i){
+  //     std::cout<<std::hex<<(int)m_Buffer[i]<<" ";
+  //   }
+    fwrite(getPacket(), 1, getNumPacketBytes()-m_PESH.getHeaderLength(), AudioMP2);
     xBufferReset();
 }
 
